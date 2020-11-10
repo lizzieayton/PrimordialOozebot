@@ -1,9 +1,23 @@
 import time
 import math
+import matplotlib.pyplot as plt
+
 
 kSpring = 10000.0
 kGround = 100000.0
 kOscillationFrequency = 10000#100000
+kDropHeight = .2
+
+times = []
+y_val = []
+kinetic = []
+potential = []
+#test = []
+
+ke = 0
+pe = 0
+
+kOscillationFrequency = 0#10000#100000
 kDropHeight = 0.2
 
 class Point:
@@ -30,7 +44,8 @@ class Spring:
 def main():
     points, springs = genPointsAndSprings()
 
-    friction = 0.5
+    staticFriction = 0.5
+    kineticFriction = 0.3
     dt = 0.0000005
     dampening = 1 - (dt * 1000)
     gravity = -9.81
@@ -40,14 +55,20 @@ def main():
     print("time multiplier: ",  0.001 / dt)
 
     start_time = time.time()
-    sim(limit, friction, dt, dampening, gravity, points, springs)
+    sim(limit, staticFriction, kineticFriction, dt, dampening, gravity, points, springs)
 
     print("--- %s seconds ---" % (time.time() - start_time))
 
-def sim(limit, friction, dt, dampening, gravity, points, springs):
+
+def sim(limit, staticFriction, kineticFriction, dt, dampening, gravity, points, springs):
     t = 0.0
     while t < limit:
         adjust = 1 + math.sin(t * kOscillationFrequency) * 0.1
+        #print('t is', t)
+        
+        ke = 0
+        pe = 0
+        
         for l in springs:
             p1 = points[l.p1]
             p2 = points[l.p2]
@@ -74,24 +95,37 @@ def sim(limit, friction, dt, dampening, gravity, points, springs):
 
             p1.fz -= dz
             p2.fz += dz
+            
+            spe = .5 * kSpring * (dist - (l.l0 * adjust))**2
+            #print('spe is', spe)
+            #if tester == 1:
+            #    print(t, l, 'spe is', spe)
+                
+            pe = pe + spe
+            #if tester == 1:
+            #    print('pe is', pe)
+            
 
         for p in points:
             fy = p.fy
             fx = p.fx
             fz = p.fz
             mass = p.mass
-
+            
+            
+            
             if p.y < 0:
                 fy += -kGround * p.y
                 fh = math.sqrt(fx**2 + fz**2)
-                if fh < abs(fy * friction):
+                if fh < abs(fy * staticFriction):
                     fx = 0
                     p.vx = 0
                     fz = 0
                     p.vz = 0
                 else:
-                    fx = fx - fy * friction
-                    fz = fz - fy * friction
+                    fyfric = fy * kineticFriction
+                    fx = fx - fyfric
+                    fz = fz - fyfric
             ax = fx / mass
             ay = fy / mass + gravity
             az = fz / mass
@@ -105,6 +139,37 @@ def sim(limit, friction, dt, dampening, gravity, points, springs):
             p.x += p.vx
             p.y += p.vy
             p.z += p.vz
+            
+            v = math.sqrt(p.vx**2 + p.vy**2 + p.vz**2)
+            
+            p_ke = .5 * p.mass * v**2
+            ke = ke + p_ke
+            gpe = p.mass * p.y
+            
+            #if tester == 4:
+            #    print(t, p, 'gpe is', gpe)
+            #    print(v)
+            pe = pe + gpe
+            
+            #if t == 0:
+            #    print('pe is', pe)
+            #new = ("test is", p.vx,p.vy,p.vz,v,p.mass,ke)
+            #print(new)
+            #test.append(new)
+        
+        if t % .5:
+            kinetic.append(ke)
+            times.append(t)
+            potential.append(pe)
+         
+        ke=0
+        pe=0
+        #if t % 2:
+        #    print('at t of', t)
+        #    print(ke)
+         #   print(pe)
+
+        tester = tester + 1
         t += dt
 
 def genPointsAndSprings():
@@ -148,3 +213,19 @@ def genPointsAndSprings():
 
 if __name__ == "__main__":
     main()
+
+x = times
+y1 = kinetic
+
+y2 = potential
+
+print('potential energy is', potential[0:15])
+print('kinetic energy is', kinetic[0:15])
+#plt.plot(x,y1)
+plt.plot(x,y1,label = kinetic)
+plt.plot(x,y2,label = potential)
+plt.show()
+
+#plt.plot(x,y2)
+#plt.show()
+#print(kinetic)
