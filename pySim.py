@@ -17,8 +17,6 @@ potential = []
 ke = 0
 pe = 0
 
-kOscillationFrequency = 0#10000#100000
-kDropHeight = 0.2
 
 class Point:
     def __init__(self, x, y, z, vx, vy, vz, mass, fx, fy, fz):
@@ -58,7 +56,6 @@ def main():
     sim(limit, staticFriction, kineticFriction, dt, dampening, gravity, points, springs)
 
     print("--- %s seconds ---" % (time.time() - start_time))
-
 
 def sim(limit, staticFriction, kineticFriction, dt, dampening, gravity, points, springs):
     t = 0.0
